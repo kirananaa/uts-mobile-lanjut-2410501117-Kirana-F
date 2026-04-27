@@ -1,29 +1,21 @@
-import { createStackNavigator } from "@react-navigation/stack";
-import DetailScreen from "../screens/DetailScreen";
-import HomeScreen from "../screens/HomeScreen";
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '../screens/HomeScreen';
+import DetailScreen from '../screens/DetailScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function StackNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: "#ffffff" },
-        headerTintColor: "#111827",
-        headerTitleStyle: { fontWeight: "700" },
-      }}
-    >
-      <Stack.Screen
-        name="Home"
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="HomeScreen" 
         component={HomeScreen}
-        options={{ title: "MovieDex" }}
+        options={{ title: 'MovieDex' }}
       />
-      <Stack.Screen
-        name="Detail"
+      <Stack.Screen 
+        name="DetailScreen" 
         component={DetailScreen}
-        options={({ route }) => ({
-          title: route?.params?.show?.name || "Detail",
-        })}
+        options={{ title: 'Detail Movie' }}
       />
     </Stack.Navigator>
   );

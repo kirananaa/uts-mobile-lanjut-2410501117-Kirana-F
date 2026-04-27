@@ -1,32 +1,20 @@
-const BASE_URL = "https://api.tvmaze.com";
+import axios from 'axios';
 
-// Ambil daftar show (halaman pertama)
-export async function fetchShows() {
-  const res = await fetch(`${BASE_URL}/shows?page=0`);
-  if (!res.ok) throw new Error(`Gagal mengambil data (${res.status})`);
-  return res.json();
-}
+const BASE_URL = 'https://api.tvmaze.com';
 
-// Cari show berdasarkan kata kunci
-export async function searchShows(query) {
-  const res = await fetch(
-    `${BASE_URL}/search/shows?q=${encodeURIComponent(query)}`,
-  );
-  if (!res.ok) throw new Error(`Pencarian gagal (${res.status})`);
-  const data = await res.json();
-  // TVMaze mengembalikan [{score, show}] — kita ambil show-nya saja
-  return data.map((item) => item.show);
-}
+export const getPopularShows = async () => {
+  const response = await axios.get(`${BASE_URL}/shows`);
+  return response.data;
+};
 
-// Ambil detail show + cast
-export async function fetchShowDetail(id) {
-  const res = await fetch(`${BASE_URL}/shows/${id}?embed[]=cast`);
-  if (!res.ok) throw new Error(`Gagal memuat detail (${res.status})`);
-  return res.json();
-}
+export const formatRating = (rating) => {
+  return rating?.average ? rating.average.toFixed(1) : 'N/A';
+};
 
-// Hapus tag HTML dari summary
-export function stripHtml(html) {
-  if (!html) return "Tidak ada deskripsi.";
-  return html.replace(/<[^>]+>/g, "");
-}
+export const formatGenres = (genres) => {
+  return genres && genres.length > 0 ? genres.join(', ') : 'No Genre';
+};
+
+export const stripHtml = (html) => {
+  return html ? html.replace(/<[^>]*>?/gm, '') : '';
+};
