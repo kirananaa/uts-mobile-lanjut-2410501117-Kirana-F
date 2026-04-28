@@ -1,297 +1,140 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+    ActivityIndicator, Alert, Image, ScrollView, StyleSheet,
+    Text, TouchableOpacity, View, StatusBar, Dimensions
 } from "react-native";
-import { useAppContext } from "../context/AppContext";
 import { fetchShowDetail, stripHtml } from "../services/api";
 
+const { width } = Dimensions.get('window');
+
 function InfoRow({ label, value }) {
-  if (!value) return null;
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
+    if (!value) return null;
+    return (
+        <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>{label}</Text>
+            <Text style={styles.infoValue}>{value}</Text>
+        </View>
+    );
 }
 
 export default function DetailScreen({ route }) {
-  // Terima data show dari navigation params
-  const showParam = route?.params?.show;
+    const showParam = route?.params?.show;
+    const [show, setShow] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  const [show, setShow] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    // Sementara favorit dimatikan dulu jika AppContext belum ada, 
+    // atau kamu bisa sambungkan ke AppContext kamu
+    const sudahFavorit = false; 
 
-  const { addFavorite, removeFavorite, isFavorite } = useAppContext();
+    useEffect(() => {
+        if (showParam?.id) loadDetail();
+    }, [showParam?.id]);
 
-  const displayShow = show ?? showParam; // pakai params dulu sambil fetch
-  const sudahFavorit = isFavorite(displayShow.id);
-
-  useEffect(() => {
-    loadDetail();
-  }, []);
-
-  async function loadDetail() {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchShowDetail(showParam.id);
-      setShow(data);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+    async function loadDetail() {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await fetchShowDetail(showParam.id);
+            setShow(data);
+        } catch (e) {
+            setError("Gagal memuat detail mendalam.");
+        } finally {
+            setLoading(false);
+        }
     }
-  }
 
-  function handleToggleFavorit() {
-    if (sudahFavorit) {
-      removeFavorite(displayShow.id);
-      Alert.alert("Dihapus", `"${displayShow.name}" dihapus dari favorit.`);
-    } else {
-      addFavorite({
-        id: displayShow.id,
-        name: displayShow.name,
-        image: displayShow.image,
-        genres: displayShow.genres,
-        rating: displayShow.rating,
-        status: displayShow.status,
-        premiered: displayShow.premiered,
-        language: displayShow.language,
-        network: displayShow.network,
-        summary: displayShow.summary,
-      });
-      Alert.alert(
-        "Ditambahkan! ⭐",
-        `"${displayShow.name}" ditambahkan ke favorit.`,
-      );
-    }
-  }
+    const displayShow = show ?? showParam;
+    const poster = displayShow?.image?.original ?? displayShow?.image?.medium;
+    const cast = show?._embedded?.cast?.slice(0, 5) ?? [];
 
-  const poster = displayShow?.image?.original ?? displayShow?.image?.medium;
-  const cast = show?._embedded?.cast?.slice(0, 5) ?? [];
+    if (!showParam) return <View style={styles.centered}><Text style={{color: '#FFF'}}>Data tidak tersedia</Text></View>;
 
-  if (!showParam) {
     return (
-      <View style={{ marginTop: 50 }}>
-        <Text>Data tidak tersedia</Text>
-      </View>
-    );
-  }
-
-  return (
-    <ScrollView style={styles.container}>
-      {/* Poster */}
-      {poster ? (
-        <Image source={{ uri: poster }} style={styles.poster} />
-      ) : (
-        <View style={[styles.poster, styles.noPoster]}>
-          <Text style={{ color: "#9CA3AF" }}>Tidak ada gambar</Text>
-        </View>
-      )}
-
-      <View style={styles.body}>
-        <Text style={styles.title}>{displayShow.name}</Text>
-
-        {displayShow.rating?.average && (
-          <Text style={styles.rating}>
-            ⭐ {displayShow.rating.average} / 10
-          </Text>
-        )}
-
-        {/* Genre */}
-        {displayShow.genres?.length > 0 && (
-          <View style={styles.genreRow}>
-            {displayShow.genres.map((g) => (
-              <View key={g} style={styles.chip}>
-                <Text style={styles.chipText}>{g}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Tombol Tambah ke Favorit */}
-        <TouchableOpacity
-          style={[styles.favBtn, sudahFavorit && styles.favBtnActive]}
-          onPress={handleToggleFavorit}
-          activeOpacity={0.8}
-        >
-          <Text
-            style={[styles.favBtnText, sudahFavorit && { color: "#DC2626" }]}
-          >
-            {sudahFavorit ? "💔 Hapus dari Favorit" : "⭐ Tambah ke Favorit"}
-          </Text>
-        </TouchableOpacity>
-
-        {loading && (
-          <ActivityIndicator color="#2563EB" style={{ marginBottom: 8 }} />
-        )}
-        {error && <Text style={styles.errText}>{error}</Text>}
-
-        {/* Informasi — minimal 5 field */}
-        <Text style={styles.sectionTitle}>Informasi</Text>
-        <View style={styles.infoCard}>
-          <InfoRow label="Status" value={displayShow.status} />
-          <InfoRow label="Bahasa" value={displayShow.language} />
-          <InfoRow label="Tayang" value={displayShow.premiered} />
-          <InfoRow label="Network" value={displayShow.network?.name} />
-          <InfoRow
-            label="Runtime"
-            value={displayShow.runtime ? `${displayShow.runtime} menit` : null}
-          />
-          <InfoRow label="Tipe" value={displayShow.type} />
-          <InfoRow
-            label="Jadwal"
-            value={displayShow.schedule?.days?.join(", ")}
-          />
-        </View>
-
-        {/* Sinopsis */}
-        {displayShow.summary && (
-          <>
-            <Text style={styles.sectionTitle}>Sinopsis</Text>
-            <Text style={styles.summary}>{stripHtml(displayShow.summary)}</Text>
-          </>
-        )}
-
-        {/* Pemeran */}
-        {cast.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Pemeran Utama</Text>
-            {cast.map(({ person, character }) => (
-              <View key={person.id} style={styles.castRow}>
-                <Image
-                  source={{
-                    uri:
-                      person.image?.medium ?? "https://via.placeholder.com/50",
-                  }}
-                  style={styles.castPhoto}
-                />
-                <View>
-                  <Text style={styles.castName}>{person.name}</Text>
-                  <Text style={styles.castChar}>sebagai {character.name}</Text>
+        <ScrollView style={styles.container}>
+            <StatusBar translucent backgroundColor="transparent" />
+            {poster ? (
+                <Image source={{ uri: poster }} style={styles.poster} />
+            ) : (
+                <View style={[styles.poster, styles.noPoster]}>
+                    <Text style={{ color: "#888" }}>Tidak ada gambar</Text>
                 </View>
-              </View>
-            ))}
-          </>
-        )}
+            )}
 
-        <View style={{ height: 32 }} />
-      </View>
-    </ScrollView>
-  );
+            <View style={styles.body}>
+                <Text style={styles.title}>{displayShow.name}</Text>
+                {displayShow.rating?.average && (
+                    <Text style={styles.rating}>⭐ {displayShow.rating.average} / 10</Text>
+                )}
+
+                {displayShow.genres?.length > 0 && (
+                    <View style={styles.genreRow}>
+                        {displayShow.genres.map((g) => (
+                            <View key={g} style={styles.chip}>
+                                <Text style={styles.chipText}>{g}</Text>
+                            </View>
+                        ))}
+                    </View>
+                )}
+
+                <Text style={styles.sectionTitle}>Informasi</Text>
+                <View style={styles.infoCard}>
+                    <InfoRow label="Status" value={displayShow.status} />
+                    <InfoRow label="Bahasa" value={displayShow.language} />
+                    <InfoRow label="Tayang" value={displayShow.premiered} />
+                    <InfoRow label="Network" value={displayShow.network?.name} />
+                    <InfoRow label="Runtime" value={displayShow.runtime ? `${displayShow.runtime} menit` : null} />
+                </View>
+
+                {displayShow.summary && (
+                    <>
+                        <Text style={styles.sectionTitle}>Sinopsis</Text>
+                        <Text style={styles.summary}>{stripHtml(displayShow.summary)}</Text>
+                    </>
+                )}
+
+                {cast.length > 0 && (
+                    <>
+                        <Text style={styles.sectionTitle}>Pemeran Utama</Text>
+                        {cast.map(({ person, character }) => (
+                            <View key={person.id} style={styles.castRow}>
+                                <Image
+                                    source={{ uri: person.image?.medium ?? "https://via.placeholder.com/50" }}
+                                    style={styles.castPhoto}
+                                />
+                                <View>
+                                    <Text style={styles.castName}>{person.name}</Text>
+                                    <Text style={styles.castChar}>sebagai {character.name}</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </>
+                )}
+                <View style={{ height: 50 }} />
+            </View>
+        </ScrollView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F5F5" },
-  poster: {
-    width: "100%",
-    height: 280,
-    resizeMode: "cover",
-    backgroundColor: "#E5E7EB",
-  },
-  noPoster: { alignItems: "center", justifyContent: "center" },
-  body: { padding: 16 },
-
-  title: { fontSize: 22, fontWeight: "700", color: "#111827", marginBottom: 4 },
-  rating: {
-    fontSize: 15,
-    color: "#F59E0B",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-
-  genreRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 16,
-  },
-  chip: {
-    backgroundColor: "#EFF6FF",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: "#2563EB",
-  },
-  chipText: { color: "#2563EB", fontSize: 12, fontWeight: "500" },
-
-  favBtn: {
-    backgroundColor: "#2563EB",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  favBtnActive: {
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#DC2626",
-  },
-  favBtnText: { color: "#ffffff", fontWeight: "700", fontSize: 15 },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
-    marginTop: 4,
-  },
-
-  infoCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    overflow: "hidden",
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  infoLabel: { color: "#6B7280", fontSize: 13, flex: 1 },
-  infoValue: {
-    color: "#111827",
-    fontSize: 13,
-    fontWeight: "500",
-    flex: 2,
-    textAlign: "right",
-  },
-
-  summary: { color: "#6B7280", fontSize: 14, lineHeight: 22, marginBottom: 16 },
-  errText: { color: "#DC2626", fontSize: 13, marginBottom: 8 },
-
-  castRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  castPhoto: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 12,
-    backgroundColor: "#E5E7EB",
-  },
-  castName: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  castChar: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+    container: { flex: 1, backgroundColor: "#0D0D1A" },
+    centered: { flex: 1, backgroundColor: "#0D0D1A", justifyContent: "center", alignItems: "center" },
+    poster: { width: width, height: 450, resizeMode: "cover" },
+    noPoster: { backgroundColor: "#1E1E32", justifyContent: "center", alignItems: "center" },
+    body: { padding: 16, marginTop: -30, backgroundColor: "#0D0D1A", borderTopLeftRadius: 30, borderTopRightRadius: 30 },
+    title: { fontSize: 26, fontWeight: "800", color: "#FFFFFF", marginBottom: 8 },
+    rating: { fontSize: 16, color: "#FCD34D", fontWeight: "700", marginBottom: 15 },
+    genreRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 20 },
+    chip: { backgroundColor: "#1E1E32", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: "#E040FB" },
+    chipText: { color: "#E040FB", fontSize: 12, fontWeight: "600" },
+    sectionTitle: { fontSize: 18, fontWeight: "700", color: "#FFFFFF", marginBottom: 10, marginTop: 15 },
+    infoCard: { backgroundColor: "#16162A", borderRadius: 12, borderWidth: 1, borderColor: "#2A2A42", overflow: "hidden", marginBottom: 16 },
+    infoRow: { flexDirection: "row", justifyContent: "space-between", padding: 12, borderBottomWidth: 1, borderBottomColor: "#2A2A42" },
+    infoLabel: { color: "#888", fontSize: 13 },
+    infoValue: { color: "#FFF", fontSize: 13, fontWeight: "600" },
+    summary: { color: "#CCC", fontSize: 14, lineHeight: 22 },
+    castRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#16162A", borderRadius: 12, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: "#2A2A42" },
+    castPhoto: { width: 50, height: 50, borderRadius: 25, marginRight: 15, backgroundColor: "#1E1E32" },
+    castName: { fontSize: 15, fontWeight: "600", color: "#FFF" },
+    castChar: { fontSize: 12, color: "#888", marginTop: 2 },
 });
