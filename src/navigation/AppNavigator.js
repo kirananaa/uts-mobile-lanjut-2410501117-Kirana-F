@@ -1,13 +1,12 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-// Import library ikon bawaan Expo
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
 
-import HomeScreen from '../screens/HomeScreen';
-import DetailScreen from '../screens/DetailScreen';
-import SearchScreen from '../screens/SearchScreen';
+import DetailScreen from "../screens/DetailScreen";
+import FavoritesScreen from "../screens/FavoritesScreen"; // Import layar Favorit
+import HomeScreen from "../screens/HomeScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,27 +29,31 @@ export default function AppNavigator() {
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
 
-            if (route.name === 'Home') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Search') {
-              iconName = focused ? 'search' : 'search-outline';
+            if (route.name === "Home") {
+              iconName = focused ? "home" : "home-outline";
+            } else if (route.name === "Search") {
+              iconName = focused ? "search" : "search-outline";
+            } else if (route.name === "Favorite") {
+              // Tambahkan logika ikon untuk tab Favorite
+              iconName = focused ? "star" : "star-outline";
             }
 
-            // Kamu bisa ganti ukuran atau jenis ikon di sini
             return <Ionicons name={iconName} size={size} color={color} />;
           },
-          tabBarStyle: { 
-            backgroundColor: '#16162A', 
-            borderTopColor: '#2A2A42', 
+          tabBarStyle: {
+            backgroundColor: "#16162A",
+            borderTopColor: "#2A2A42",
             height: 65,
-            paddingBottom: 10
+            paddingBottom: 10,
           },
-          tabBarActiveTintColor: '#E040FB', // Warna ungu aktif
-          tabBarInactiveTintColor: '#888',
+          tabBarActiveTintColor: "#E040FB",
+          tabBarInactiveTintColor: "#888",
         })}
       >
         <Tab.Screen name="Home" component={HomeStack} />
         <Tab.Screen name="Search" component={SearchScreen} />
+        {/* Tambahkan Tab Favorit di sini */}
+        <Tab.Screen name="Favorite" component={FavoritesScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

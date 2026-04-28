@@ -2,6 +2,7 @@ import {
   Alert,
   FlatList,
   Image,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,7 +22,7 @@ function FavItem({ item, onPress, onHapus }) {
         <Image source={{ uri: poster }} style={styles.poster} />
       ) : (
         <View style={[styles.poster, styles.noPoster]}>
-          <Text>🎬</Text>
+          <Text style={{ fontSize: 24 }}>🎬</Text>
         </View>
       )}
 
@@ -46,7 +47,6 @@ function FavItem({ item, onPress, onHapus }) {
         )}
       </View>
 
-      {/* Tombol Hapus dari Favorit */}
       <TouchableOpacity style={styles.hapusBtn} onPress={() => onHapus(item)}>
         <Text style={styles.hapusText}>Hapus</Text>
       </TouchableOpacity>
@@ -58,8 +58,8 @@ export default function FavoritesScreen({ navigation }) {
   const { favorites, removeFavorite } = useAppContext();
 
   function handlePress(show) {
-    // Navigasi ke Detail dari tab Favorit — harus lewat HomeStack
-    navigation.navigate("HomeStack", { screen: "Detail", params: { show } });
+    // Navigasi ke Detail melalui HomeStack agar tidak error
+    navigation.navigate("Home", { screen: "Detail", params: { show } });
   }
 
   function handleHapus(item) {
@@ -76,10 +76,12 @@ export default function FavoritesScreen({ navigation }) {
   if (favorites.length === 0) {
     return (
       <View style={styles.center}>
+        <StatusBar barStyle="light-content" backgroundColor="#0D0D1A" />
         <Text style={styles.emptyIcon}>⭐</Text>
         <Text style={styles.emptyTitle}>Belum ada favorit</Text>
         <Text style={styles.emptyDesc}>
-          Buka detail show lalu tekan "Tambah ke Favorit".
+          Buka detail film lalu tekan "Tambah ke Favorit" untuk menyimpan
+          koleksimu.
         </Text>
       </View>
     );
@@ -87,6 +89,7 @@ export default function FavoritesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0D0D1A" />
       <FlatList
         data={favorites}
         keyExtractor={(item) => String(item.id)}
@@ -94,7 +97,7 @@ export default function FavoritesScreen({ navigation }) {
           <FavItem item={item} onPress={handlePress} onHapus={handleHapus} />
         )}
         contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         ListHeaderComponent={
           <Text style={styles.header}>
             ⭐ Favorit Saya ({favorites.length})
@@ -106,67 +109,63 @@ export default function FavoritesScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F5F5" },
-  list: { padding: 12, paddingBottom: 24 },
+  container: { flex: 1, backgroundColor: "#0D0D1A" }, // Latar Gelap
+  list: { padding: 16, paddingTop: 60 },
   header: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 12,
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: 20,
   },
-
   card: {
     flexDirection: "row",
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
+    backgroundColor: "#16162A", // Kartu Gelap
+    borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#2A2A42",
     alignItems: "center",
   },
   poster: {
-    width: 70,
-    height: 100,
+    width: 80,
+    height: 110,
     resizeMode: "cover",
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#1E1E32",
   },
   noPoster: { alignItems: "center", justifyContent: "center" },
-
-  info: { flex: 1, padding: 10, gap: 3 },
-  name: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  genre: { fontSize: 12, color: "#6B7280" },
-  rating: { fontSize: 12, color: "#F59E0B", fontWeight: "600" },
-  statusOn: { fontSize: 11, fontWeight: "500", color: "#16A34A" },
-  statusOff: { fontSize: 11, fontWeight: "500", color: "#6B7280" },
-
+  info: { flex: 1, padding: 12, gap: 4 },
+  name: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+  genre: { fontSize: 12, color: "#A78BFA" }, // Warna Ungu Muda
+  rating: { fontSize: 12, color: "#FCD34D", fontWeight: "700" },
+  statusOn: { fontSize: 11, fontWeight: "600", color: "#4ADE80" },
+  statusOff: { fontSize: 11, fontWeight: "600", color: "#F87171" },
   hapusBtn: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginRight: 8,
-    backgroundColor: "#FEF2F2",
-    borderRadius: 6,
+    marginRight: 12,
+    backgroundColor: "rgba(220, 38, 38, 0.1)", // Transparan merah
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#DC2626",
   },
-  hapusText: { color: "#DC2626", fontSize: 12, fontWeight: "600" },
-
+  hapusText: { color: "#DC2626", fontSize: 12, fontWeight: "700" },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 32,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#0D0D1A",
   },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyIcon: { fontSize: 60, marginBottom: 16 },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#FFFFFF",
     marginBottom: 8,
   },
   emptyDesc: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#888",
     textAlign: "center",
     lineHeight: 22,
   },
